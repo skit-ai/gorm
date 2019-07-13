@@ -1245,6 +1245,7 @@ func (scope *Scope) addIndex(unique bool, indexName string, column ...string) {
 	scope.Raw(fmt.Sprintf("%s %v ON %v(%v) %v", sqlCreate, indexName, scope.QuotedTableName(), strings.Join(columns, ", "), scope.whereSQL())).Exec()
 }
 
+// Pass empty onDelete/onUpdate string to use the database defaults.
 func (scope *Scope) addForeignKey(field string, dest string, onDelete string, onUpdate string) {
 	// Compatible with old generated key
 	keyName := scope.Dialect().BuildKeyName(scope.TableName(), field, dest, "foreign")
@@ -1252,8 +1253,32 @@ func (scope *Scope) addForeignKey(field string, dest string, onDelete string, on
 	if scope.Dialect().HasForeignKey(scope.TableName(), keyName) {
 		return
 	}
-	var query = `ALTER TABLE %s ADD CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s ON DELETE %s ON UPDATE %s;`
-	scope.Raw(fmt.Sprintf(query, scope.QuotedTableName(), scope.quoteIfPossible(keyName), scope.quoteIfPossible(field), dest, onDelete, onUpdate)).Exec()
+
+	onDeleteLen := len(strings.TrimSpace(onDelete))
+	onUpdateLen := len(strings.TrimSpace(onUpdate))
+
+	var baseTemplate, suffix string
+	var additionalArgs []interface{}
+	if onDeleteLen != 0 && onUpdateLen != 0 {
+		suffix = ` ON DELETE %s ON UPDATE %s;`
+		additionalArgs = []interface{}{onDelete, onUpdate}
+	} else if onDeleteLen != 0 {
+		suffix = ` ON DELETE %s;`
+		additionalArgs = []interface{}{onDelete}
+	} else if onUpdateLen != 0 {
+		suffix = ` ON UPDATE %s;`
+		additionalArgs = []interface{}{onUpdate}
+	} else {
+		suffix = ";"
+		additionalArgs = []interface{}{}
+	}
+
+	baseTemplate = `ALTER TABLE %s ADD CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s`
+	queryTemplate := fmt.Sprintf("%s%s", baseTemplate, suffix)
+
+	templateArgs := append([]interface{}{scope.QuotedTableName(), scope.quoteIfPossible(keyName), scope.quoteIfPossible(field), dest}, additionalArgs...)
+
+	scope.Raw(fmt.Sprintf(queryTemplate, templateArgs...)).Exec()
 }
 
 func (scope *Scope) removeForeignKey(field string, dest string) {
