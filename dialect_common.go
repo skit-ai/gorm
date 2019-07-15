@@ -181,3 +181,9 @@ func (commonDialect) NormalizeIndexAndColumn(indexName, columnName string) (stri
 func IsByteArrayOrSlice(value reflect.Value) bool {
 	return (value.Kind() == reflect.Array || value.Kind() == reflect.Slice) && value.Type().Elem() == reflect.TypeOf(uint8(0))
 }
+
+// Returns the primary key via the row ID
+func (commonDialect) ResolveRowID(tableName string, rowID int64) int64{
+	// In case of most DB's, it's assumed that the result of the `result.LastInsertId()` is the ID of the record
+	return rowID
+}

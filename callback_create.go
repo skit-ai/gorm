@@ -132,7 +132,7 @@ func createCallback(scope *Scope) {
 				// set primary value to primary field
 				if primaryField != nil && primaryField.IsBlank {
 					if primaryValue, err := result.LastInsertId(); scope.Err(err) == nil {
-						scope.Err(primaryField.Set(primaryValue))
+						scope.Err(primaryField.Set(scope.Dialect().ResolveRowID(scope.TableName(), primaryValue)))
 					}
 				}
 			}

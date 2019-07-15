@@ -53,6 +53,10 @@ type Dialect interface {
 
 	// CurrentDatabase return current database name
 	CurrentDatabase() string
+
+	// In case the database returns a row ID, it will resolve the row ID with the primary key of the row
+	// Currently only supports a single primary key
+	ResolveRowID(tableName string, rowID int64) int64
 }
 
 var dialectsMap = map[string]Dialect{}
