@@ -1248,7 +1248,7 @@ func (scope *Scope) addIndex(unique bool, indexName string, column ...string) {
 // Pass empty onDelete/onUpdate string to use the database defaults.
 func (scope *Scope) addForeignKey(field string, dest string, onDelete string, onUpdate string) {
 	// Compatible with old generated key
-	keyName := scope.Dialect().BuildKeyName(scope.TableName(), field, dest, "foreign")
+	keyName := scope.Dialect().BuildKeyName(scope.TableName(), field, dest, "fk")
 
 	if scope.Dialect().HasForeignKey(scope.TableName(), keyName) {
 		return
@@ -1257,24 +1257,25 @@ func (scope *Scope) addForeignKey(field string, dest string, onDelete string, on
 	onDeleteLen := len(strings.TrimSpace(onDelete))
 	onUpdateLen := len(strings.TrimSpace(onUpdate))
 
+	// Optionally add ON DELETE and ON UPDATE clauses on the basis of the onDelete and onUpdate strings passed
 	var baseTemplate, suffix string
 	var additionalArgs []interface{}
 	if onDeleteLen != 0 && onUpdateLen != 0 {
-		suffix = ` ON DELETE %s ON UPDATE %s;`
+		suffix = ` ON DELETE %s ON UPDATE %s`
 		additionalArgs = []interface{}{onDelete, onUpdate}
 	} else if onDeleteLen != 0 {
-		suffix = ` ON DELETE %s;`
+		suffix = ` ON DELETE %s`
 		additionalArgs = []interface{}{onDelete}
 	} else if onUpdateLen != 0 {
-		suffix = ` ON UPDATE %s;`
+		suffix = ` ON UPDATE %s`
 		additionalArgs = []interface{}{onUpdate}
 	} else {
-		suffix = ";"
+		suffix = ""
 		additionalArgs = []interface{}{}
 	}
 
 	baseTemplate = `ALTER TABLE %s ADD CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s`
-	queryTemplate := fmt.Sprintf("%s%s", baseTemplate, suffix)
+	queryTemplate := fmt.Sprintf("%s%s%s", baseTemplate, suffix, scope.Dialect().ClientStatementSeparator())
 
 	templateArgs := append([]interface{}{scope.QuotedTableName(), scope.quoteIfPossible(keyName), scope.quoteIfPossible(field), dest}, additionalArgs...)
 
@@ -1282,7 +1283,7 @@ func (scope *Scope) addForeignKey(field string, dest string, onDelete string, on
 }
 
 func (scope *Scope) removeForeignKey(field string, dest string) {
-	keyName := scope.Dialect().BuildKeyName(scope.TableName(), field, dest, "foreign")
+	keyName := scope.Dialect().BuildKeyName(scope.TableName(), field, dest, "fk")
 	if !scope.Dialect().HasForeignKey(scope.TableName(), keyName) {
 		return
 	}
