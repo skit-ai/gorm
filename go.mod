@@ -9,5 +9,6 @@ require (
 	github.com/jinzhu/inflection v1.0.0
 	github.com/jinzhu/now v1.0.1
 	github.com/lib/pq v1.1.1
+	github.com/mattn/go-oci8 v0.0.0-20190524004114-abcafa411cc8
 	github.com/mattn/go-sqlite3 v1.10.0
 )
