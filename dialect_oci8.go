@@ -39,8 +39,6 @@ func (*oci8) BindVar(i int) string {
 
 func (o *oci8) DataTypeOf(field *StructField) string {
 	var dataValue, sqlType, size, additionalType = ParseFieldStructForDialect(field, o)
-	//fmt.Println("==========")
-	fmt.Printf("(%s) dataValue: `%v`, sqlType: `%v`, size: `%v`, additionalType: `%v`, kind: `%s`\n", field.Name, dataValue, sqlType, size, additionalType, dataValue.Type().Kind())
 
 	if len(sqlType) == 0 {
 		switch dataValue.Kind() {
@@ -86,7 +84,7 @@ func (o *oci8) DataTypeOf(field *StructField) string {
 		// In case the user has specified uuid as the type explicitly
 		sqlType = "VARCHAR(36)"
 	}
-	fmt.Println("==========")
+
 	if len(sqlType) == 0 {
 		panic(fmt.Sprintf("invalid sql type %s (%s) for oci8", dataValue.Type().Name(), dataValue.Kind().String()))
 	}
