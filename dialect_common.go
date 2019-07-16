@@ -187,3 +187,9 @@ func (commonDialect) ResolveRowID(tableName string, rowID int64) int64{
 	// In case of most DB's, it's assumed that the result of the `result.LastInsertId()` is the ID of the record
 	return rowID
 }
+
+// Client statement separator used to terminate the statement
+func (commonDialect) ClientStatementSeparator() string{
+	// In case of most DB's, it's a semicolon
+	return ";"
+}

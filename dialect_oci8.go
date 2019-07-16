@@ -171,3 +171,9 @@ func (o *oci8) ResolveRowID(tableName string, rowID int64) int64{
 
 	return rowID
 }
+
+// Client statement separator used to terminate the statement
+func (*oci8) ClientStatementSeparator() string{
+	// In case of most DB's, it's a semicolon
+	return ""
+}
