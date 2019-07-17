@@ -118,18 +118,6 @@ func (o *oci8) HasColumn(tableName string, columnName string) bool {
 	return count > 0
 }
 
-//func (*oci8) LimitAndOffsetSQL(limit, offset interface{}) (whereSQL, suffixSQL string) {
-// switch limit := limit.(type) {
-// case int, uint, uint8, int8, uint16, int16, uint32, int32, uint64, int64:
-// 	whereSQL += fmt.Sprintf("ROWNUM <= %d", limit)
-// }
-//return
-//}
-
-//func (o *oci8) BuildForeignKeyName(tableName, field, dest string) string {
-//	keyName := o.commonDialect.BuildForeignKeyName(tableName, field, dest)
-//	return o.buildSha(keyName)
-//}
 
 func (*oci8) buildSha(str string) string {
 	if utf8.RuneCountInString(str) <= 30 {
