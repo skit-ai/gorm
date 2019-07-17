@@ -206,3 +206,6 @@ func (*oci8) LimitAndOffsetSQL(limit, offset interface{}) (sql string) {
 	return
 }
 
+func (*oci8) ColumnEquality(fieldDBName, columnName string) bool {
+	return strings.EqualFold(fieldDBName, columnName)
+}

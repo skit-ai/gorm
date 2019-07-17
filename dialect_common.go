@@ -193,3 +193,7 @@ func (commonDialect) ClientStatementSeparator() string{
 	// In case of most DB's, it's a semicolon
 	return ";"
 }
+
+func (commonDialect) ColumnEquality(fieldDBName, columnName string) bool{
+	return fieldDBName == columnName
+}

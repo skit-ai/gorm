@@ -60,6 +60,9 @@ type Dialect interface {
 
 	// Separator at the end of a statement
 	ClientStatementSeparator() string
+
+	// Checks if a field name matches with a given column name. This is a special case for oracle DB since column names are all CAPS
+	ColumnEquality(fieldDBName, columnName string) bool
 }
 
 var dialectsMap = map[string]Dialect{}
