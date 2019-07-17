@@ -74,7 +74,6 @@ func (o *oci8) DataTypeOf(field *StructField) string {
 			} else if isJSON(dataValue) {
 				// Adding a contraint to see ensure that the value is a well formed JSON
 				sqlType = fmt.Sprintf("CLOB CHECK (%s IS JSON)", strings.ToLower(field.DBName))
-				//sqlType = "CLOB"
 			} else if IsByteArrayOrSlice(dataValue) {
 				sqlType = "BLOB"
 			}
@@ -175,3 +174,35 @@ func (*oci8) ClientStatementSeparator() string{
 	// In case of most DB's, it's a semicolon
 	return ""
 }
+
+func (*oci8) LimitAndOffsetSQL(limit, offset interface{}) (sql string) {
+	// In case both limit and offset are nil, simply return and empty string
+	if offset == nil && limit == nil{
+		return ""
+	}
+
+	var parsedLimit, parsedOffset int64
+	var errLimitParse, errOffsetParse error
+	// Parsing the limit and the offset beforehand
+	if limit != nil {
+		parsedLimit, errLimitParse = strconv.ParseInt(fmt.Sprint(limit), 0, 0);
+	}
+	if offset != nil {
+		parsedOffset, errOffsetParse = strconv.ParseInt(fmt.Sprint(offset), 0, 0);
+	}
+
+	// Offset clause comes first
+	if errOffsetParse == nil && parsedOffset >= 0 {
+		sql += fmt.Sprintf(" OFFSET %d", parsedOffset)
+	} else if parsedLimit > 0 {
+		// Set the offset as zero in case there is no offset > 0 specified for a limit > 0
+		sql += fmt.Sprintf(" OFFSET %d", 0)
+	}
+
+	// Limit clause comes later
+	if  errLimitParse == nil && parsedLimit >= 0 {
+		sql += fmt.Sprintf(" ROWS FETCH NEXT %d ROWS ONLY", parsedLimit)
+	}
+	return
+}
+
