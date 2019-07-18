@@ -171,12 +171,15 @@ func afterCreateCallback(scope *Scope) {
 		scope.CallMethod("AfterSave")
 	}
 
-	// Setting the value of the primary field if it is a unique ID.
-	// Currently does not support composite primary keys
-	scope.Dialect().SetDB(scope.db.db)
-	primaryField := scope.PrimaryField()
-	val := primaryField.Field.Interface()
-	if arg, ok := val.(uint); ok{
-		scope.Err(primaryField.Set(scope.Dialect().ResolveRowID(scope.TableName(), arg)))
+	if !scope.HasError() {
+		// Setting the value of the primary field if it is a unique ID.
+		// Currently does not support composite primary keys
+		scope.Dialect().SetDB(scope.db.db)
+		primaryField := scope.PrimaryField()
+		val := primaryField.Field.Interface()
+		// Row ID cannot be 0. Obvious issue that has occurred upstream.
+		if arg, ok := val.(uint); ok && arg != 0{
+			scope.Err(primaryField.Set(scope.Dialect().ResolveRowID(scope.TableName(), arg)))
+		}
 	}
 }
