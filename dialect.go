@@ -63,6 +63,9 @@ type Dialect interface {
 
 	// Checks if a field name matches with a given column name. This is a special case for oracle DB since column names are all CAPS
 	ColumnEquality(fieldDBName, columnName string) bool
+
+	// Determing the tag setting based on the dialect being used
+	GetTagSetting(field *StructField, key string) (string, bool)
 }
 
 var dialectsMap = map[string]Dialect{}
@@ -96,7 +99,7 @@ var ParseFieldStructForDialect = func(field *StructField, dialect Dialect) (fiel
 	// Get redirected field type
 	var (
 		reflectType = field.Struct.Type
-		dataType, _ = field.TagSettingsGet("TYPE")
+		dataType, _ = dialect.GetTagSetting(field, "TYPE")
 	)
 
 	for reflectType.Kind() == reflect.Ptr {
@@ -125,21 +128,21 @@ var ParseFieldStructForDialect = func(field *StructField, dialect Dialect) (fiel
 	}
 
 	// Default Size
-	if num, ok := field.TagSettingsGet("SIZE"); ok {
+	if num, ok := dialect.GetTagSetting(field, "SIZE"); ok {
 		size, _ = strconv.Atoi(num)
 	} else {
 		size = 255
 	}
 
 	// Default type from tag setting
-	notNull, _ := field.TagSettingsGet("NOT NULL")
-	unique, _ := field.TagSettingsGet("UNIQUE")
+	notNull, _ := dialect.GetTagSetting(field, "NOT NULL")
+	unique, _ := dialect.GetTagSetting(field, "UNIQUE")
 	additionalType = notNull + " " + unique
-	if value, ok := field.TagSettingsGet("DEFAULT"); ok {
+	if value, ok := dialect.GetTagSetting(field, "DEFAULT"); ok {
 		additionalType = additionalType + " DEFAULT " + value
 	}
 
-	if value, ok := field.TagSettingsGet("COMMENT"); ok {
+	if value, ok := dialect.GetTagSetting(field, "COMMENT"); ok {
 		additionalType = additionalType + " COMMENT " + value
 	}
 

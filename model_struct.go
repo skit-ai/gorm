@@ -86,6 +86,19 @@ func (sf *StructField) TagSettingsGet(key string) (string, bool) {
 	return val, ok
 }
 
+// TagSettingsGet returns a the first tag it found from the tag settings that matched with the slice of keys passed
+// The keys are searched for in order
+func (sf *StructField) TagSettingsGetFirst(keys ...string) (val string, ok bool) {
+	sf.tagSettingsLock.RLock()
+	defer sf.tagSettingsLock.RUnlock()
+	for _, key := range keys {
+		if val, ok = sf.TagSettings[key]; ok {
+			break
+		}
+	}
+	return
+}
+
 // TagSettingsDelete deletes a tag
 func (sf *StructField) TagSettingsDelete(key string) {
 	sf.tagSettingsLock.Lock()

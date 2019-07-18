@@ -41,7 +41,7 @@ func (commonDialect) Quote(key string) string {
 }
 
 func (s *commonDialect) fieldCanAutoIncrement(field *StructField) bool {
-	if value, ok := field.TagSettingsGet("AUTO_INCREMENT"); ok {
+	if value, ok := s.GetTagSetting(field, "AUTO_INCREMENT"); ok {
 		return strings.ToLower(value) != "false"
 	}
 	return field.IsPrimaryKey
@@ -194,6 +194,10 @@ func (commonDialect) ClientStatementSeparator() string{
 	return ";"
 }
 
-func (commonDialect) ColumnEquality(fieldDBName, columnName string) bool{
+func (commonDialect) ColumnEquality(fieldDBName, columnName string) bool {
 	return fieldDBName == columnName
+}
+
+func (s commonDialect) GetTagSetting(field *StructField, key string) (val string, ok bool) {
+	return field.TagSettingsGet(key)
 }

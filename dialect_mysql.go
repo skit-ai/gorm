@@ -35,8 +35,8 @@ func (s *mysql) DataTypeOf(field *StructField) string {
 
 	// MySQL allows only one auto increment column per table, and it must
 	// be a KEY column.
-	if _, ok := field.TagSettingsGet("AUTO_INCREMENT"); ok {
-		if _, ok = field.TagSettingsGet("INDEX"); !ok && !field.IsPrimaryKey {
+	if _, ok := s.GetTagSetting(field, "AUTO_INCREMENT"); ok {
+		if _, ok = s.GetTagSetting(field, "INDEX"); !ok && !field.IsPrimaryKey {
 			field.TagSettingsDelete("AUTO_INCREMENT")
 		}
 	}
@@ -98,11 +98,11 @@ func (s *mysql) DataTypeOf(field *StructField) string {
 		case reflect.Struct:
 			if _, ok := dataValue.Interface().(time.Time); ok {
 				precision := ""
-				if p, ok := field.TagSettingsGet("PRECISION"); ok {
+				if p, ok := s.GetTagSetting(field, "PRECISION"); ok {
 					precision = fmt.Sprintf("(%s)", p)
 				}
 
-				if _, ok := field.TagSettingsGet("NOT NULL"); ok || field.IsPrimaryKey {
+				if _, ok := s.GetTagSetting(field, "NOT NULL"); ok || field.IsPrimaryKey {
 					sqlType = fmt.Sprintf("timestamp%v", precision)
 				} else {
 					sqlType = fmt.Sprintf("timestamp%v NULL", precision)
