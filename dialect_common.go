@@ -183,7 +183,7 @@ func IsByteArrayOrSlice(value reflect.Value) bool {
 }
 
 // Returns the primary key via the row ID
-func (commonDialect) ResolveRowID(tableName string, rowID int64) int64{
+func (commonDialect) ResolveRowID(tableName string, rowID uint) uint{
 	// In case of most DB's, it's assumed that the result of the `result.LastInsertId()` is the ID of the record
 	return rowID
 }

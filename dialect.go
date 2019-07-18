@@ -56,7 +56,7 @@ type Dialect interface {
 
 	// In case the database returns a row ID, it will resolve the row ID with the primary key of the row
 	// Currently only supports a single primary key
-	ResolveRowID(tableName string, rowID int64) int64
+	ResolveRowID(tableName string, rowID uint) uint
 
 	// Separator at the end of a statement
 	ClientStatementSeparator() string

@@ -137,23 +137,17 @@ func (*oci8) buildSha(str string) string {
 
 // Returns the primary key via the row ID
 // Assumes that the primary key is the ID of the table
-// Does not seem to be working ! Need to see why there is a lag in accessing the entry using the rowID
-func (o *oci8) ResolveRowID(tableName string, rowID int64) int64{
-	strRowID := ociDriver.GetLastInsertId(rowID)
+func (o *oci8) ResolveRowID(tableName string, rowID uint) uint{
+	strRowID := ociDriver.GetLastInsertId(int64(rowID))
 	var id string
 	query := fmt.Sprintf(`SELECT id FROM %s WHERE rowid = :2`, o.Quote(tableName))
-
 	var err error
 	if err = o.db.QueryRow(query, strRowID).Scan(&id); err == nil{
-		if res, err := strconv.ParseInt(id, 10, 64); err == nil{
-			return res
+		if res, err := strconv.ParseUint(id, 10, 32); err == nil{
+			resolvedId := uint(res)
+			return resolvedId
 		}
 	}
-
-	if err != nil{
-		fmt.Println(err)
-	}
-
 	return rowID
 }
 
