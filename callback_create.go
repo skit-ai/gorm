@@ -132,7 +132,7 @@ func createCallback(scope *Scope) {
 				// set primary value to primary field
 				if primaryField != nil && primaryField.IsBlank {
 					if primaryValue, err := result.LastInsertId(); scope.Err(err) == nil {
-						scope.Err(primaryField.Set(scope.Dialect().ResolveRowID(scope.TableName(), primaryValue)))
+						scope.Err(primaryField.Set(primaryValue))
 					}
 				}
 			}
@@ -169,5 +169,14 @@ func afterCreateCallback(scope *Scope) {
 	}
 	if !scope.HasError() {
 		scope.CallMethod("AfterSave")
+	}
+
+	// Setting the value of the primary field if it is a unique ID.
+	// Currently does not support composite primary keys
+	scope.Dialect().SetDB(scope.db.db)
+	primaryField := scope.PrimaryField()
+	val := primaryField.Field.Interface()
+	if arg, ok := val.(uint); ok{
+		scope.Err(primaryField.Set(scope.Dialect().ResolveRowID(scope.TableName(), arg)))
 	}
 }
