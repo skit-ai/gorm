@@ -40,6 +40,14 @@ func (*oci8) BindVar(i int) string {
 func (o *oci8) DataTypeOf(field *StructField) string {
 	var dataValue, sqlType, size, additionalType = ParseFieldStructForDialect(field, o)
 
+	charset, _ := o.GetTagSetting(field,"CHARSET")
+	var strDataType string
+	if strings.EqualFold(charset,"utf-8"){
+		strDataType = "NVARCHAR2"
+	} else {
+		strDataType = "VARCHAR2"
+	}
+
 	if len(sqlType) == 0 {
 		switch dataValue.Kind() {
 		case reflect.Bool:
@@ -59,10 +67,11 @@ func (o *oci8) DataTypeOf(field *StructField) string {
 		case reflect.Float32, reflect.Float64:
 			sqlType = "FLOAT"
 		case reflect.String:
-			if size > 0 && size < 255 {
-				sqlType = fmt.Sprintf("VARCHAR(%d)", size)
+			// Maximum size of VARCHAR2 is 4000 bytes or characters if MAX_STRING_SIZE = STANDARD
+			if size > 0 && size < 4000 {
+				sqlType = fmt.Sprintf("%s(%d)", strDataType, size)
 			} else {
-				sqlType = "VARCHAR(255)"
+				sqlType = fmt.Sprintf("%s(255)", strDataType)
 			}
 		case reflect.Struct:
 			if _, ok := dataValue.Interface().(time.Time); ok {
@@ -70,9 +79,9 @@ func (o *oci8) DataTypeOf(field *StructField) string {
 			}
 		case reflect.Array, reflect.Slice:
 			if isUUID(dataValue) {
-				sqlType = "VARCHAR(36)"
+				sqlType = fmt.Sprintf("%s(36)", strDataType)
 			} else if isJSON(dataValue) {
-				// Adding a contraint to see ensure that the value is a well formed JSON
+				// Adding a constraint to see ensure that the value is a well formed JSON
 				sqlType = fmt.Sprintf("CLOB CHECK (%s IS JSON)", strings.ToLower(field.DBName))
 			} else if IsByteArrayOrSlice(dataValue) {
 				sqlType = "BLOB"
@@ -81,7 +90,7 @@ func (o *oci8) DataTypeOf(field *StructField) string {
 
 	} else if isUUID(dataValue){
 		// In case the user has specified uuid as the type explicitly
-		sqlType = "VARCHAR(36)"
+		sqlType = fmt.Sprintf("%s(36)", strDataType)
 	}
 
 	if len(sqlType) == 0 {
