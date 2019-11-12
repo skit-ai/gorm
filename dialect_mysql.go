@@ -117,6 +117,9 @@ func (s *mysql) DataTypeOf(field *StructField) string {
 				}
 			}
 		}
+	} else if isUUID(dataValue) {
+		// In case the user has specified uuid as the type explicitly
+		sqlType = "varchar(36)"
 	}
 
 	if sqlType == "" {
