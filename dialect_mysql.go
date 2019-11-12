@@ -110,7 +110,10 @@ func (s *mysql) DataTypeOf(field *StructField) string {
 			}
 		default:
 			if IsByteArrayOrSlice(dataValue) {
-				if size > 0 && size < 65532 {
+				if isJSON(dataValue) {
+					// Adding a constraint to see ensure that the value is a well formed JSON
+					sqlType = "json"
+				} else if size > 0 && size < 65532 {
 					sqlType = fmt.Sprintf("varbinary(%d)", size)
 				} else {
 					sqlType = "longblob"
