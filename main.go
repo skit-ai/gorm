@@ -694,6 +694,13 @@ func (s *DB) RemoveIndex(indexName string) *DB {
 	return scope.db
 }
 
+// RemoveIndex remove constraint with name
+func (s *DB) RemoveConstraint(constraintName string) *DB {
+	scope := s.NewScope(s.Value)
+	scope.removeConstraint(constraintName)
+	return scope.db
+}
+
 // AddForeignKey Add foreign key to the given scope, e.g:
 //     db.Model(&User{}).AddForeignKey("city_id", "cities(id)", "RESTRICT", "RESTRICT")
 func (s *DB) AddForeignKey(field string, dest string, onDelete string, onUpdate string) *DB {
