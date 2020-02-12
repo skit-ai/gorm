@@ -140,6 +140,11 @@ func (s mysql) RemoveIndex(tableName string, indexName string) error {
 	return err
 }
 
+func (s mysql) RemoveConstraint(tableName string, constraintName string) error {
+	_, err := s.db.Exec(fmt.Sprintf("ALTER TABLE %v DROP INDEX %v", tableName, constraintName))
+	return err
+}
+
 func (s mysql) ModifyColumn(tableName string, columnName string, typ string) error {
 	_, err := s.db.Exec(fmt.Sprintf("ALTER TABLE %v MODIFY COLUMN %v %v", tableName, columnName, typ))
 	return err

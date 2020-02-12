@@ -111,6 +111,11 @@ func (s commonDialect) RemoveIndex(tableName string, indexName string) error {
 	return err
 }
 
+func (s commonDialect) RemoveConstraint(tableName string, constraintName string) error {
+	_, err := s.db.Exec(fmt.Sprintf("ALTER TABLE %v DROP CONSTRAINT %v", tableName, constraintName))
+	return err
+}
+
 func (s commonDialect) HasForeignKey(tableName string, foreignKeyName string) bool {
 	return false
 }
