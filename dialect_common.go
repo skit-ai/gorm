@@ -206,3 +206,7 @@ func (commonDialect) ColumnEquality(fieldDBName, columnName string) bool {
 func (s commonDialect) GetTagSetting(field *StructField, key string) (val string, ok bool) {
 	return field.TagSettingsGet(key)
 }
+
+func (s commonDialect) GetByteLimit() int {
+	return -1
+}

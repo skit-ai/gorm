@@ -68,6 +68,8 @@ type Dialect interface {
 
 	// Determing the tag setting based on the dialect being used
 	GetTagSetting(field *StructField, key string) (string, bool)
+	// Determine the limit of byte size for a BLOB
+	GetByteLimit() int
 }
 
 var dialectsMap = map[string]Dialect{}
