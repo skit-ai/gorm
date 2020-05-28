@@ -154,7 +154,7 @@ func (o *oci8) ResolveRowID(tableName string, rowID uint) uint{
 	query := fmt.Sprintf(`SELECT id FROM %s WHERE rowid = :2`, o.Quote(tableName))
 	var err error
 	if err = o.db.QueryRow(query, strRowID).Scan(&id); err == nil{
-		if res, err := strconv.ParseUint(id, 10, 32); err == nil{
+		if res, err := strconv.ParseUint(id, 10, 64); err == nil{
 			resolvedId := uint(res)
 			return resolvedId
 		}
