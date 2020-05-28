@@ -178,8 +178,8 @@ func afterCreateCallback(scope *Scope) {
 		primaryField := scope.PrimaryField()
 		val := primaryField.Field.Interface()
 
-		// In case the primary key implements valuer, using the value from that valuer to resolve a row ID
-		if primary, ok := val.(primary); ok {
+		// In case the Primary key is of type gorm.Primary, using the value from that valuer to resolve a row ID
+		if primary, ok := val.(Primary); ok {
 			val = primary.ID
 		}
 

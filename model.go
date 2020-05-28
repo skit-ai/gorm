@@ -16,11 +16,11 @@ type Model struct {
 	DeletedAt *time.Time `sql:"index"`
 }
 
-type primary struct {
+type Primary struct {
 	ID uint
 }
 
-func (x *primary) Scan(src interface{}) error {
+func (x *Primary) Scan(src interface{}) error {
 	if val, ok := src.(uint); ok {
 		x.ID = val
 	} else if val, ok := src.(float64); ok {
@@ -37,12 +37,12 @@ func (x *primary) Scan(src interface{}) error {
 	return nil
 }
 
-func (x *primary) Value() (driver.Value, error) {
+func (x *Primary) Value() (driver.Value, error) {
 	return x.ID, nil
 }
 
 type ORM struct {
-	ID        primary `gorm:"primary_key"`
+	ID        Primary `gorm:"primary_key"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt *time.Time `sql:"index"`
