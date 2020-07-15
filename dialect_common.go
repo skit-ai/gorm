@@ -139,6 +139,16 @@ func (s commonDialect) ModifyColumn(tableName string, columnName string, typ str
 	return err
 }
 
+func (s commonDialect) Nullable(tableName string, columnName string, colType string, isNull bool) error {
+	var err error
+	if isNull {
+		_, err = s.db.Exec(fmt.Sprintf("ALTER TABLE %v MODIFY %v %v NULL", tableName, columnName, colType))
+	} else {
+		_, err = s.db.Exec(fmt.Sprintf("ALTER TABLE %v MODIFY %v %v NOT NULL", tableName, columnName, colType))
+	}
+	return err
+}
+
 func (s commonDialect) CurrentDatabase() (name string) {
 	s.db.QueryRow("SELECT DATABASE()").Scan(&name)
 	return

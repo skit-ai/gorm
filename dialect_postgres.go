@@ -115,6 +115,16 @@ func (s postgres) HasColumn(tableName string, columnName string) bool {
 	return count > 0
 }
 
+func (s postgres) Nullable(tableName string, columnName string, colType string, isNull bool) error {
+	var err error
+	if isNull {
+		_, err = s.db.Exec(fmt.Sprintf("ALTER TABLE %v ALTER COLUMN %v DROP NOT NULL", tableName, columnName))
+	} else {
+		_, err = s.db.Exec(fmt.Sprintf("ALTER TABLE %v ALTER COLUMN %v SET NOT NULL", tableName, columnName))
+	}
+	return err
+}
+
 func (s postgres) CurrentDatabase() (name string) {
 	s.db.QueryRow("SELECT CURRENT_DATABASE()").Scan(&name)
 	return

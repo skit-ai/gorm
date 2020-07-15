@@ -129,6 +129,16 @@ func (o *oci8) HasColumn(tableName string, columnName string) bool {
 	return count > 0
 }
 
+func (s *oci8) Nullable(tableName string, columnName string, colType string, isNull bool) error {
+	var err error
+	if isNull {
+		_, err = s.db.Exec(fmt.Sprintf("ALTER TABLE %v MODIFY %v NULL", tableName, columnName))
+	} else {
+		_, err = s.db.Exec(fmt.Sprintf("ALTER TABLE %v MODIFY %v NOT NULL", tableName, columnName))
+	}
+	return err
+}
+
 
 func (*oci8) buildSha(str string) string {
 	if utf8.RuneCountInString(str) <= 30 {

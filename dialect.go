@@ -37,6 +37,8 @@ type Dialect interface {
 	HasColumn(tableName string, columnName string) bool
 	// ModifyColumn modify column's type
 	ModifyColumn(tableName string, columnName string, typ string) error
+	// Nullable sets column's null constraint
+ 	Nullable(tableName string, columnName string, colType string, isNull bool) error
 
 	// LimitAndOffsetSQL return generated SQL with Limit and Offset, as mssql has special case
 	LimitAndOffsetSQL(limit, offset interface{}) string
