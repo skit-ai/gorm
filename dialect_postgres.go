@@ -26,6 +26,15 @@ func (postgres) BindVar(i int) string {
 }
 
 func (s *postgres) DataTypeOf(field *StructField) string {
+	var sqlType, additionalType = s.SplitDataTypeOf(field)
+
+	if strings.TrimSpace(additionalType) == "" {
+		return sqlType
+	}
+	return fmt.Sprintf("%v %v", sqlType, additionalType)
+}
+
+func (s *postgres) SplitDataTypeOf(field *StructField) (string, string) {
 	var dataValue, sqlType, size, additionalType = ParseFieldStructForDialect(field, s)
 
 	if sqlType == "" {
@@ -85,10 +94,7 @@ func (s *postgres) DataTypeOf(field *StructField) string {
 		panic(fmt.Sprintf("invalid sql type %s (%s) for postgres", dataValue.Type().Name(), dataValue.Kind().String()))
 	}
 
-	if strings.TrimSpace(additionalType) == "" {
-		return sqlType
-	}
-	return fmt.Sprintf("%v %v", sqlType, additionalType)
+	return sqlType, additionalType
 }
 
 func (s postgres) HasIndex(tableName string, indexName string) bool {
@@ -115,13 +121,8 @@ func (s postgres) HasColumn(tableName string, columnName string) bool {
 	return count > 0
 }
 
-func (s postgres) Nullable(tableName string, columnName string, colType string, isNull bool) error {
-	var err error
-	if isNull {
-		_, err = s.db.Exec(fmt.Sprintf("ALTER TABLE %v ALTER COLUMN %v DROP NOT NULL", tableName, columnName))
-	} else {
-		_, err = s.db.Exec(fmt.Sprintf("ALTER TABLE %v ALTER COLUMN %v SET NOT NULL", tableName, columnName))
-	}
+func (s postgres) DropNullable(tableName string, columnName string, colType string) error {
+	_, err := s.db.Exec(fmt.Sprintf("ALTER TABLE %v ALTER COLUMN %v DROP NOT NULL", tableName, columnName))
 	return err
 }
 
