@@ -31,6 +31,15 @@ func (mysql) Quote(key string) string {
 
 // Get Data Type for MySQL Dialect
 func (s *mysql) DataTypeOf(field *StructField) string {
+	var sqlType, additionalType = s.SplitDataTypeOf(field)
+
+	if strings.TrimSpace(additionalType) == "" {
+		return sqlType
+	}
+	return fmt.Sprintf("%v %v", sqlType, additionalType)
+}
+
+func (s *mysql) SplitDataTypeOf(field *StructField) (string, string) {
 	var dataValue, sqlType, size, additionalType = ParseFieldStructForDialect(field, s)
 
 	// MySQL allows only one auto increment column per table, and it must
@@ -129,10 +138,7 @@ func (s *mysql) DataTypeOf(field *StructField) string {
 		panic(fmt.Sprintf("invalid sql type %s (%s) for mysql", dataValue.Type().Name(), dataValue.Kind().String()))
 	}
 
-	if strings.TrimSpace(additionalType) == "" {
-		return sqlType
-	}
-	return fmt.Sprintf("%v %v", sqlType, additionalType)
+	return sqlType, additionalType
 }
 
 func (s mysql) RemoveIndex(tableName string, indexName string) error {

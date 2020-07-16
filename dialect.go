@@ -22,6 +22,8 @@ type Dialect interface {
 	Quote(key string) string
 	// DataTypeOf return data's sql type
 	DataTypeOf(field *StructField) string
+	// SplitDataTypeOf returns data's sql type and it's additional type
+	SplitDataTypeOf(field *StructField) (string, string)
 
 	// HasIndex check has index or not
 	HasIndex(tableName string, indexName string) bool
@@ -37,6 +39,8 @@ type Dialect interface {
 	HasColumn(tableName string, columnName string) bool
 	// ModifyColumn modify column's type
 	ModifyColumn(tableName string, columnName string, typ string) error
+	// Nullable sets column's null constraint
+	DropNullable(tableName string, columnName string, colType string) error
 
 	// LimitAndOffsetSQL return generated SQL with Limit and Offset, as mssql has special case
 	LimitAndOffsetSQL(limit, offset interface{}) string

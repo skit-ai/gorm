@@ -666,6 +666,13 @@ func (s *DB) ModifyColumn(column string, typ string) *DB {
 	return scope.db
 }
 
+// Nullable sets column's null constraint
+func (s *DB) DropNullable(column string) *DB {
+	scope := s.NewScope(s.Value)
+	scope.dropNullable(column)
+	return scope.db
+}
+
 // DropColumn drop a column
 func (s *DB) DropColumn(column string) *DB {
 	scope := s.NewScope(s.Value)
