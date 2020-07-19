@@ -6,10 +6,10 @@ import (
 	"crypto/sha1"
 	"fmt"
 	ociDriver "github.com/mattn/go-oci8"
-	"strconv"
 	"reflect"
-	"time"
+	"strconv"
 	"strings"
+	"time"
 	"unicode/utf8"
 )
 
@@ -160,15 +160,15 @@ func (*oci8) buildSha(str string) string {
 // Assumes that the primary key is the ID of the table
 func (o *oci8) ResolveRowID(tableName string, rowID uint) uint {
 	strRowID := ociDriver.GetLastInsertId(int64(rowID))
-	var id string
+	var id float64
 	query := fmt.Sprintf(`SELECT id FROM %s WHERE rowid = :2`, o.Quote(tableName))
 	var err error
 	if err = o.db.QueryRow(query, strRowID).Scan(&id); err == nil {
-		if res, err := strconv.ParseUint(id, 10, 64); err == nil {
-			resolvedId := uint(res)
-			return resolvedId
-		}
+		return uint(id)
+	} else {
+		defaultLogger.Print(fmt.Sprintf("[warning][oci8] Unable to fetch ID for rowID %v: %v\n", strRowID, err))
 	}
+
 	return rowID
 }
 
