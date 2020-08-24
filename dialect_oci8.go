@@ -135,6 +135,11 @@ func (o *oci8) HasColumn(tableName string, columnName string) bool {
 	return count > 0
 }
 
+func (o *oci8) ModifyColumn(tableName string, columnName string, typ string) error {
+	_, err := o.db.Exec(fmt.Sprintf("ALTER TABLE %v MODIFY %v %v", tableName, columnName, typ))
+	return err
+}
+
 func (s *oci8) DropNullable(tableName string, columnName string, colType string) error {
 	_, err := s.db.Exec(fmt.Sprintf("ALTER TABLE %v MODIFY %v %v NULL", tableName, columnName, colType))
 	return err
