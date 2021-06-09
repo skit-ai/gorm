@@ -438,6 +438,15 @@ func (s *DB) Update(attrs ...interface{}) *DB {
 	return s.Updates(toSearchableMap(attrs...), true)
 }
 
+// Increments integer attributes with the values set in the interface passed
+func (s *DB) Increment(values interface{}, ignoreProtectedAttrs ...bool) *DB {
+	return s.NewScope(values).
+		Set("gorm:ignore_protected_attrs", len(ignoreProtectedAttrs) > 0).
+		InstanceSet("gorm:update_interface", values).
+		InstanceSet("gorm:increment_attrs", values).
+		callCallbacks(s.parent.callbacks.updates).db
+}
+
 // Updates update attributes with callbacks, refer: https://jinzhu.github.io/gorm/crud.html#update
 func (s *DB) Updates(values interface{}, ignoreProtectedAttrs ...bool) *DB {
 	return s.NewScope(s.Value).
