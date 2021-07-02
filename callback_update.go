@@ -81,12 +81,12 @@ func updateCallback(scope *Scope) {
 						// Use increment logic
 						if !field.IsPrimaryKey && field.IsNormal && (field.Name != "CreatedAt" || !field.IsBlank) && !field.IsForeignKey {
 							// Only incrementing uint columns which are not Pkey or Fkey
-							if (!field.IsForeignKey || !field.IsBlank || !field.HasDefaultValue) && field.Field.Kind() == reflect.Uint {
-								sqls = append(sqls, fmt.Sprintf("%v = %v + %s ", scope.Quote(field.DBName), scope.Quote(field.DBName), scope.AddToVars(field.Field.Uint())))
+							if (!field.IsForeignKey || !field.IsBlank || !field.HasDefaultValue) && (field.Field.Kind() == reflect.Uint || field.Field.Kind() == reflect.Float64|| field.Field.Kind() == reflect.Float32) {
+								sqls = append(sqls, fmt.Sprintf("%v = %v + %s ", scope.Quote(field.DBName), scope.Quote(field.DBName), scope.AddToVars(field.Field.Interface())))
 							}
 						} else if relationship := field.Relationship; relationship != nil && relationship.Kind == "belongs_to" {
 							for _, foreignKey := range relationship.ForeignDBNames {
-								if foreignField, ok := scope.FieldByName(foreignKey); ok && !scope.changeableField(foreignField) && foreignField.Field.Kind() == reflect.Uint {
+								if foreignField, ok := scope.FieldByName(foreignKey); ok && !scope.changeableField(foreignField) && (foreignField.Field.Kind() == reflect.Uint || foreignField.Field.Kind() == reflect.Float32 || foreignField.Field.Kind() == reflect.Float64) {
 									sqls = append(sqls,
 										fmt.Sprintf("%v = %v + %s", scope.Quote(foreignField.DBName), scope.Quote(foreignField.DBName), scope.AddToVars(foreignField.Field.Uint())))
 								}
