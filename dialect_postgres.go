@@ -152,3 +152,12 @@ func isJSON(value reflect.Value) bool {
 	_, ok := value.Interface().(json.RawMessage)
 	return ok
 }
+
+// Check if there is a dialect specific setting first, if yes, that takes precedence
+// Dialect specific keys can be specified by prefixing the dialect name to the key.
+// eg. A dialect specific size for postgres can be specified as "postgres size"
+// Then check if there is a generic setting
+func (s postgres) GetTagSetting(field *StructField, key string) (val string, ok bool) {
+	val, ok = field.TagSettingsGetFirst(strings.ToUpper(s.GetName())+" "+key, key)
+	return
+}
