@@ -201,15 +201,15 @@ func (*oci8) LimitAndOffsetSQL(limit, offset interface{}) (sql string) {
 
 	// Offset clause comes first
 	if errOffsetParse == nil && parsedOffset >= 0 {
-		sql += fmt.Sprintf(" OFFSET %d", parsedOffset)
+		sql += fmt.Sprintf(" OFFSET %d ROWS", parsedOffset)
 	} else if parsedLimit > 0 {
 		// Set the offset as zero in case there is no offset > 0 specified for a limit > 0
-		sql += fmt.Sprintf(" OFFSET %d", 0)
+		sql += fmt.Sprintf(" OFFSET %d ROWS", 0)
 	}
 
 	// Limit clause comes later
 	if errLimitParse == nil && parsedLimit >= 0 {
-		sql += fmt.Sprintf(" ROWS FETCH NEXT %d ROWS ONLY", parsedLimit)
+		sql += fmt.Sprintf(" FETCH NEXT %d ROWS ONLY", parsedLimit)
 	}
 	return
 }
