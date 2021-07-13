@@ -229,3 +229,16 @@ func (o *oci8) GetTagSetting(field *StructField, key string) (val string, ok boo
 func (o *oci8) GetByteLimit() int {
 	return 30000
 }
+
+func (o *oci8) ConditionFormat(field *Field) (interface{}, bool) {
+	if field.Field.Type() == reflect.TypeOf(time.Time{}) {
+		// Format timestamp for Oracle
+		//2018-11-03 12:35:20.419000
+		if t, ok := field.Field.Interface().(time.Time); ok  {
+			//return fmt.Sprintf("to_timestamp('%s', 'YYYY-MM-DD HH24:MI:SS.FF')", t.Format("2006-01-02 15:04:05.999999999")), true
+			return fmt.Sprintf("TIMESTAMP '%s'", t.Format("2006-01-02 15:04:05.999999999")), true
+		}
+	}
+
+	return o.commonDialect.ConditionFormat(field)
+}

@@ -609,10 +609,17 @@ func (scope *Scope) buildCondition(clause map[string]interface{}, include bool) 
 			scope.Err(fmt.Errorf("invalid query condition: %v", value))
 			return
 		}
+
 		scopeQuotedTableName := newScope.QuotedTableName()
 		for _, field := range newScope.Fields() {
 			if !field.IsIgnored && !field.IsBlank {
-				sqls = append(sqls, fmt.Sprintf("(%v.%v %s %v)", scopeQuotedTableName, scope.Quote(field.DBName), equalSQL, scope.AddToVars(field.Field.Interface())))
+				sqlVar, useDirectly := scope.Dialect().ConditionFormat(field)
+				if useDirectly {
+					// Use the dialect specific representation directly instead of using it as a bindvar or as a "?"
+					sqls = append(sqls, fmt.Sprintf("(%v.%v %s %v)", scopeQuotedTableName, scope.Quote(field.DBName), equalSQL, sqlVar))
+				} else {
+					sqls = append(sqls, fmt.Sprintf("(%v.%v %s %v)", scopeQuotedTableName, scope.Quote(field.DBName), equalSQL, scope.AddToVars(sqlVar)))
+				}
 			}
 		}
 		return strings.Join(sqls, " AND ")
