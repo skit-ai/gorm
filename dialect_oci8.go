@@ -86,7 +86,7 @@ func (o *oci8) SplitDataTypeOf(field *StructField) (string, string) {
 			}
 		case reflect.Struct:
 			if _, ok := dataValue.Interface().(time.Time); ok {
-				sqlType = "TIMESTAMP"
+				sqlType = "TIMESTAMP WITH TIME ZONE"
 			}
 		case reflect.Array, reflect.Slice:
 			if isUUID(dataValue) {
