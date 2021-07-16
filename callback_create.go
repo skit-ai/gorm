@@ -63,7 +63,7 @@ func createCallback(scope *Scope) {
 					if field.IsBlank && field.HasDefaultValue {
 						blankColumnsWithDefaultValue = append(blankColumnsWithDefaultValue, scope.Quote(field.DBName))
 						scope.InstanceSet("gorm:blank_columns_with_default_value", blankColumnsWithDefaultValue)
-					} else if !field.IsPrimaryKey || !field.IsBlank {
+					} else if !(field.IsPrimaryKey || field.IsBlank) {
 						columns = append(columns, scope.Quote(field.DBName))
 						placeholders = append(placeholders, scope.AddToVars(field.Field.Interface()))
 					}
@@ -151,6 +151,17 @@ func createCallback(scope *Scope) {
 
 // forceReloadAfterCreateCallback will reload columns that having default value, and set it back to current object
 func forceReloadAfterCreateCallback(scope *Scope) {
+	if !scope.HasError() {
+		// Setting the value of the primary field if it is a unique ID.
+		// Currently does not support composite primary keys
+		scope.Dialect().SetDB(scope.db.db)
+		primaryField := scope.PrimaryField()
+		// Row ID cannot be 0. Obvious issue that has occurred upstream.
+		if val := primaryField.Field.Uint(); val != 0 {
+			scope.Err(primaryField.Set(scope.Dialect().ResolveRowID(scope.TableName(), uint(val))))
+		}
+	}
+
 	if blankColumnsWithDefaultValue, ok := scope.InstanceGet("gorm:blank_columns_with_default_value"); ok {
 		db := scope.DB().New().Table(scope.TableName()).Select(blankColumnsWithDefaultValue.([]string))
 		for _, field := range scope.Fields() {
@@ -169,16 +180,5 @@ func afterCreateCallback(scope *Scope) {
 	}
 	if !scope.HasError() {
 		scope.CallMethod("AfterSave")
-	}
-
-	if !scope.HasError() {
-		// Setting the value of the primary field if it is a unique ID.
-		// Currently does not support composite primary keys
-		scope.Dialect().SetDB(scope.db.db)
-		primaryField := scope.PrimaryField()
-		// Row ID cannot be 0. Obvious issue that has occurred upstream.
-		if val := primaryField.Field.Uint(); val != 0 {
-			scope.Err(primaryField.Set(scope.Dialect().ResolveRowID(scope.TableName(), uint(val))))
-		}
 	}
 }

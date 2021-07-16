@@ -86,7 +86,7 @@ func (o *oci8) SplitDataTypeOf(field *StructField) (string, string) {
 			}
 		case reflect.Struct:
 			if _, ok := dataValue.Interface().(time.Time); ok {
-				sqlType = "TIMESTAMP"
+				sqlType = "TIMESTAMP WITH TIME ZONE"
 			}
 		case reflect.Array, reflect.Slice:
 			if isUUID(dataValue) {
@@ -163,18 +163,36 @@ func (*oci8) buildSha(str string) string {
 
 // Returns the primary key via the row ID
 // Assumes that the primary key is the ID of the table
-func (o *oci8) ResolveRowID(tableName string, rowID uint) uint {
-	strRowID := ociDriver.GetLastInsertId(int64(rowID))
+func (o *oci8) ResolveRowID(tableName string, lastInsertID uint) (resolvedID uint) {
+	// recover from panic of `ociDriver.GetLastInsertId`
+	// Generally implies that the ID for the entry has already been fetched
+	// Currently the cleanest way to handle this error.
+	defer func() {
+		if r := recover(); r!=nil {
+			resolvedID = lastInsertID
+		}
+	}()
+
+	// Determine the rowID on the basis of the LastInsertID
+	strRowID := ociDriver.GetLastInsertId(int64(lastInsertID))
+	if fetchedID, ok := o.GetRowID(tableName, strRowID); ok {
+		return fetchedID
+	}
+
+	// Directly return lastInsertID if the value could not be determined
+	return lastInsertID
+}
+
+func (o *oci8) GetRowID(tableName string, rowID interface{}) (uint, bool) {
 	var id float64
 	query := fmt.Sprintf(`SELECT id FROM %s WHERE rowid = :2`, o.Quote(tableName))
 	var err error
-	if err = o.db.QueryRow(query, strRowID).Scan(&id); err == nil {
-		return uint(id)
+	if err = o.db.QueryRow(query, rowID).Scan(&id); err == nil {
+		return uint(id), true
 	} else {
-		defaultLogger.Print(fmt.Sprintf("[warning][oci8] Unable to fetch ID for rowID %v: %v\n", strRowID, err))
+		defaultLogger.Print(fmt.Sprintf("[warning][oci8] Unable to fetch ID for rowID %v: %v\n", rowID, err))
 	}
-
-	return rowID
+	return 0, false
 }
 
 // Client statement separator used to terminate the statement
@@ -201,15 +219,15 @@ func (*oci8) LimitAndOffsetSQL(limit, offset interface{}) (sql string) {
 
 	// Offset clause comes first
 	if errOffsetParse == nil && parsedOffset >= 0 {
-		sql += fmt.Sprintf(" OFFSET %d", parsedOffset)
+		sql += fmt.Sprintf(" OFFSET %d ROWS", parsedOffset)
 	} else if parsedLimit > 0 {
 		// Set the offset as zero in case there is no offset > 0 specified for a limit > 0
-		sql += fmt.Sprintf(" OFFSET %d", 0)
+		sql += fmt.Sprintf(" OFFSET %d ROWS", 0)
 	}
 
 	// Limit clause comes later
 	if errLimitParse == nil && parsedLimit >= 0 {
-		sql += fmt.Sprintf(" ROWS FETCH NEXT %d ROWS ONLY", parsedLimit)
+		sql += fmt.Sprintf(" FETCH NEXT %d ROWS ONLY", parsedLimit)
 	}
 	return
 }
@@ -228,4 +246,17 @@ func (o *oci8) GetTagSetting(field *StructField, key string) (val string, ok boo
 
 func (o *oci8) GetByteLimit() int {
 	return 30000
+}
+
+func (o *oci8) ConditionFormat(field *Field) (interface{}, bool) {
+	if field.Field.Type() == reflect.TypeOf(time.Time{}) {
+		// Format timestamp for Oracle
+		//2018-11-03 12:35:20.419000
+		if t, ok := field.Field.Interface().(time.Time); ok  {
+			//return fmt.Sprintf("to_timestamp('%s', 'YYYY-MM-DD HH24:MI:SS.FF')", t.Format("2006-01-02 15:04:05.999999999")), true
+			return fmt.Sprintf("TIMESTAMP '%s'", t.Format("2006-01-02 15:04:05.999999999")), true
+		}
+	}
+
+	return o.commonDialect.ConditionFormat(field)
 }

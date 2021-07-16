@@ -74,6 +74,8 @@ type Dialect interface {
 	GetTagSetting(field *StructField, key string) (string, bool)
 	// Determine the limit of byte size for a BLOB
 	GetByteLimit() int
+	// Formats the field in a way that the underlying DB is able parse it without issue
+	ConditionFormat(field *Field) (interface{}, bool)
 }
 
 var dialectsMap = map[string]Dialect{}

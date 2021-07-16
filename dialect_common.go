@@ -221,3 +221,7 @@ func (s commonDialect) GetTagSetting(field *StructField, key string) (val string
 func (s commonDialect) GetByteLimit() int {
 	return -1
 }
+
+func (s commonDialect) ConditionFormat(field *Field) (interface{}, bool) {
+	return field.Field.Interface(), false
+}
