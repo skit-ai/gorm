@@ -163,18 +163,36 @@ func (*oci8) buildSha(str string) string {
 
 // Returns the primary key via the row ID
 // Assumes that the primary key is the ID of the table
-func (o *oci8) ResolveRowID(tableName string, rowID uint) uint {
-	strRowID := ociDriver.GetLastInsertId(int64(rowID))
+func (o *oci8) ResolveRowID(tableName string, lastInsertID uint) (resolvedID uint) {
+	// recover from panic of `ociDriver.GetLastInsertId`
+	// Generally implies that the ID for the entry has already been fetched
+	// Currently the cleanest way to handle this error.
+	defer func() {
+		if r := recover(); r!=nil {
+			resolvedID = lastInsertID
+		}
+	}()
+
+	// Determine the rowID on the basis of the LastInsertID
+	strRowID := ociDriver.GetLastInsertId(int64(lastInsertID))
+	if fetchedID, ok := o.GetRowID(tableName, strRowID); ok {
+		return fetchedID
+	}
+
+	// Directly return lastInsertID if the value could not be determined
+	return lastInsertID
+}
+
+func (o *oci8) GetRowID(tableName string, rowID interface{}) (uint, bool) {
 	var id float64
 	query := fmt.Sprintf(`SELECT id FROM %s WHERE rowid = :2`, o.Quote(tableName))
 	var err error
-	if err = o.db.QueryRow(query, strRowID).Scan(&id); err == nil {
-		return uint(id)
+	if err = o.db.QueryRow(query, rowID).Scan(&id); err == nil {
+		return uint(id), true
 	} else {
-		defaultLogger.Print(fmt.Sprintf("[warning][oci8] Unable to fetch ID for rowID %v: %v\n", strRowID, err))
+		defaultLogger.Print(fmt.Sprintf("[warning][oci8] Unable to fetch ID for rowID %v: %v\n", rowID, err))
 	}
-
-	return rowID
+	return 0, false
 }
 
 // Client statement separator used to terminate the statement
