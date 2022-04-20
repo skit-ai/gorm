@@ -14,7 +14,7 @@ import (
 
 var (
 	defaultLogger            = Logger{log.New(os.Stdout, "\r\n", 0)}
-	sqlRegexp                = regexp.MustCompile(`\?`)
+	sqlRegexp                = regexp.MustCompile(`\?|:\d`)
 	numericPlaceHolderRegexp = regexp.MustCompile(`\$\d+`)
 )
 
