@@ -234,3 +234,54 @@ func (j *JSON) Scan(value interface{}) error {
 	bytes := []byte(str)
 	return json.Unmarshal(bytes, j)
 }
+
+// ResolveRowID resolve row ID with primary key
+func (s mssql) ResolveRowID(tableName string, rowID uint64) uint64 {
+	return rowID
+}
+
+// ClientStatementSeparator return statement separator
+func (mssql) ClientStatementSeparator() string {
+	return ";"
+}
+
+// ColumnEquality check column equality
+func (mssql) ColumnEquality(fieldDBName, columnName string) bool {
+	return strings.EqualFold(fieldDBName, columnName)
+}
+
+// GetTagSetting get tag setting
+func (mssql) GetTagSetting(field *gorm.StructField, key string) (string, bool) {
+	if value, ok := field.TagSettings[key]; ok {
+		return value, true
+	}
+	return "", false
+}
+
+// GetByteLimit get byte limit
+func (mssql) GetByteLimit() int {
+	return 8000
+}
+
+// ConditionFormat format condition for field
+func (mssql) ConditionFormat(field *gorm.Field) (interface{}, bool) {
+	return field.Field.Interface(), false
+}
+
+// DropNullable drop nullable constraint  
+func (s mssql) DropNullable(tableName string, columnName string, colType string) error {
+	_, err := s.db.Exec(fmt.Sprintf("ALTER TABLE %v ALTER COLUMN %v %v NOT NULL", tableName, columnName, colType))
+	return err
+}
+
+// RemoveConstraint remove constraint from column
+func (s mssql) RemoveConstraint(tableName string, constraintName string) error {
+	_, err := s.db.Exec(fmt.Sprintf("ALTER TABLE %v DROP CONSTRAINT %v", tableName, constraintName))
+	return err
+}
+
+// SplitDataTypeOf split data type into type and additional type
+func (s mssql) SplitDataTypeOf(field *gorm.StructField) (string, string) {
+	dataType := s.DataTypeOf(field)
+	return dataType, ""
+}

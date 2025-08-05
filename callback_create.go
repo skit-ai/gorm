@@ -2,6 +2,7 @@ package gorm
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 )
 
@@ -161,8 +162,18 @@ func forceReloadAfterCreateCallback(scope *Scope) {
 		scope.Dialect().SetDB(scope.db.db)
 		primaryField := scope.PrimaryField()
 		// Row ID cannot be 0. Obvious issue that has occurred upstream.
-		if val := primaryField.Field.Uint(); val != 0 {
-			scope.Err(primaryField.Set(scope.Dialect().ResolveRowID(scope.TableName(), uint(val))))
+		if primaryField != nil {
+			var val uint64
+			if primaryField.Field.Kind() == reflect.Uint || primaryField.Field.Kind() == reflect.Uint8 || 
+				primaryField.Field.Kind() == reflect.Uint16 || primaryField.Field.Kind() == reflect.Uint32 || 
+				primaryField.Field.Kind() == reflect.Uint64 {
+				val = primaryField.Field.Uint()
+			} else {
+				val = uint64(primaryField.Field.Int())
+			}
+			if val != 0 {
+				scope.Err(primaryField.Set(scope.Dialect().ResolveRowID(scope.TableName(), val)))
+			}
 		}
 	}
 
